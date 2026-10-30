@@ -1,3 +1,11 @@
+2026-10-30 Kumar-Jy <20044626+Kumar-Jy@users.noreply.github.com>
+	* 7.3.0-1:
+	- Iris: fix SM8150 VPU5 runtime PM forbid and ISR interrupt clear (fixes VIDIOC_REQBUFS failures)
+	- Iris: restore Gen1 buffer requirements query (HFI_CMD_SESSION_GET_PROPERTY) and session property info handling
+	- Iris: fix internal scratch/persist buffer sizing and DPB count for VPU5 hardware decode
+	- Iris: verified H.264 and HEVC 1080p hardware decoding on SM8150 hardware
+	- Packaging: bump release to 7.3.0-1 with CONFIG_LOCALVERSION="-krjy" alignment
+
 2026-10-21 Kumar-Jy <20044626+Kumar-Jy@users.noreply.github.com>
 	* 7.3.0-0:
 	- Final release for Linux 7.3.0 with complete Xiaomi Pad 5 (nabu) hardware support

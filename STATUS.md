@@ -77,7 +77,7 @@ The full nabu/SM8150 stack was ported forward from the 6.18 baseline onto a pris
 
 ---
 
-## Linux 7.3 Release (7.3.0-0 Final)
+## Linux 7.3 Release (7.3.0-1 Final)
 
 The complete Xiaomi Pad 5 (nabu) hardware stack has been ported to the pristine upstream **Linux 7.3.0** baseline (branch `nabu/7.3.y`). All peripherals in the hardware support matrix are fully functional.
 
@@ -88,7 +88,12 @@ The complete Xiaomi Pad 5 (nabu) hardware stack has been ported to the pristine 
   - Dual clock supplies (`vcodec0_core` and `vcodec1_core`) enabled and scaled synchronously with OPP levels.
   - Opp-table voltage ordering deferred until both GDSC power domains are operational.
   - Zeroed HFI command and response ring memory buffers to avoid firmware assertion errors.
-  - Full hardware decode (`/dev/video16`) and encode (`/dev/video17`) verified.
+  - Full hardware decode (`/dev/video0`, `/dev/video16`) and encode (`/dev/video1`, `/dev/video17`) verified.
+- **7.3.0-1 Iris Hardware Video Decoder Fixes**:
+  - Runtime PM & ISR: added `pm_runtime_forbid()` for `legacy_vpu5` in `iris_probe.c` and hardware interrupt clear in `iris_hfi_isr()`, resolving `VIDIOC_REQBUFS failed: Invalid argument`.
+  - Gen1 Buffer Negotiation: implemented `HFI_CMD_SESSION_GET_PROPERTY` and `HFI_MSG_SESSION_PROPERTY_INFO` handler in `iris_hfi_gen1_command.c` and `iris_hfi_gen1_response.c` to capture exact firmware buffer requirements.
+  - Internal Buffer Alignment: updated `iris_buffer.c` to assign firmware-requested scratch/persist buffer sizes (`fw_buffer_sizes[]`) and set pre-sequence DPB counts, eliminating `Load Resources Command received without complete buffer set 6/16` error.
+  - Hardware Verification: verified H.264 (10.6x speed) and HEVC (13.9x speed) 1080p hardware decode cleanly on device.
 
 ### 2. Charging & Board Revision Compatibility
 - **PM8150B SMB5 Charger**: Configured 50 mA fine-grained current steps (`smb5_parse_dt`) and USB Type-C Rp advertising current adoption when higher than standard USB-PD / SDP limits (PR #2).
@@ -105,5 +110,5 @@ The complete Xiaomi Pad 5 (nabu) hardware stack has been ported to the pristine 
 - **Sensors**: SLPI FastRPC sensor PDR registration with SDSP high-IOVA alias mapping for auto-rotation and ambient light sensing.
 
 ### 5. Packaging & Verification
-- **Package**: `linux-nabu-7.3.0-0` (`arch=('aarch64')`, kernel release `7.3.0-0-krjy`).
+- **Package**: `linux-nabu-7.3.0-1` (`arch=('aarch64')`, kernel release `7.3.0-1-krjy`).
 - **Unified Kernel Image (UKI)**: Automated UKI generation via `ukify` with DTB symlink, permissive device links, and early firmware bundling in `packages/linux-nabu-73/linux-nabu.install`.

@@ -298,6 +298,9 @@ static int iris_probe(struct platform_device *pdev)
 	if (ret)
 		goto err_vdev_unreg_enc;
 
+	if (core->iris_platform_data->legacy_vpu5)
+		pm_runtime_forbid(core->dev);
+
 	return 0;
 
 err_vdev_unreg_enc:

@@ -21,6 +21,7 @@
 
 #define HFI_CMD_SYS_INIT				0x10001
 #define HFI_CMD_SYS_PC_PREP				0x10002
+#define HFI_CMD_SYS_SET_RESOURCE			0x10003
 #define HFI_CMD_SYS_SET_PROPERTY			0x10005
 #define HFI_CMD_SYS_GET_PROPERTY			0x10006
 #define HFI_CMD_SYS_SESSION_INIT			0x10007
@@ -35,6 +36,7 @@
 #define HFI_CMD_SESSION_EMPTY_BUFFER			0x211004
 #define HFI_CMD_SESSION_FILL_BUFFER			0x211005
 #define HFI_CMD_SESSION_FLUSH				0x211008
+#define HFI_CMD_SESSION_GET_PROPERTY			0x211009
 #define HFI_CMD_SESSION_RELEASE_BUFFERS			0x21100b
 #define HFI_CMD_SESSION_RELEASE_RESOURCES		0x21100c
 #define HFI_CMD_SESSION_CONTINUE			0x21100d
@@ -80,8 +82,15 @@
 #define HFI_BUFFER_INTERNAL_SCRATCH_1			0x7
 #define HFI_BUFFER_INTERNAL_SCRATCH_2			0x8
 
+#define HFI_PROPERTY_SYS_DEBUG_CONFIG			0x1
 #define HFI_PROPERTY_SYS_CODEC_POWER_PLANE_CTRL		0x5
 #define HFI_PROPERTY_SYS_IMAGE_VERSION			0x6
+
+#define HFI_DEBUG_MSG_ERROR				0x00000008
+#define HFI_DEBUG_MSG_FATAL				0x00000010
+#define HFI_DEBUG_MODE_QUEUE				0x00000001
+
+#define HFI_RESOURCE_SYSCACHE				0x00000002
 
 #define HFI_PROPERTY_PARAM_FRAME_SIZE			0x1001
 #define HFI_PROPERTY_PARAM_UNCOMPRESSED_PLANE_ACTUAL_INFO	0x1002
@@ -113,6 +122,7 @@
 #define HFI_MSG_SESSION_FLUSH				0x221006
 #define HFI_MSG_SESSION_EMPTY_BUFFER			0x221007
 #define HFI_MSG_SESSION_FILL_BUFFER			0x221008
+#define HFI_MSG_SESSION_PROPERTY_INFO			0x221009
 #define HFI_MSG_SESSION_RELEASE_RESOURCES		0x22100a
 #define HFI_MSG_SESSION_RELEASE_BUFFERS			0x22100c
 
@@ -188,6 +198,13 @@ struct hfi_sys_init_pkt {
 	u32 arch_type;
 };
 
+struct hfi_sys_set_resource_pkt {
+	struct hfi_pkt_hdr hdr;
+	u32 resource_handle;
+	u32 resource_type;
+	u32 data[];
+};
+
 struct hfi_sys_set_property_pkt {
 	struct hfi_pkt_hdr hdr;
 	u32 num_properties;
@@ -204,6 +221,12 @@ struct hfi_session_set_property_pkt {
 	struct hfi_session_hdr_pkt shdr;
 	u32 num_properties;
 	u32 data[];
+};
+
+struct hfi_session_get_property_pkt {
+	struct hfi_session_hdr_pkt shdr;
+	u32 num_properties;
+	u32 data;
 };
 
 struct hfi_sys_pc_prep_pkt {
@@ -325,6 +348,11 @@ struct hfi_msg_session_flush_done_pkt {
 
 struct hfi_enable {
 	u32 enable;
+};
+
+struct hfi_debug_config {
+	u32 debug_config;
+	u32 debug_mode;
 };
 
 struct hfi_profile_level {
@@ -579,6 +607,13 @@ struct hfi_msg_session_release_buffers_done_pkt {
 	struct hfi_msg_session_hdr_pkt shdr;
 	u32 num_buffers;
 	u32 buffer_info[];
+};
+
+struct hfi_msg_session_property_info_pkt {
+	struct hfi_session_hdr_pkt shdr;
+	u32 num_properties;
+	u32 property;
+	u8 data[];
 };
 
 struct hfi_msg_sys_debug_pkt {

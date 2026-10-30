@@ -8,6 +8,7 @@
 #include <linux/pm_opp.h>
 #include <linux/pm_runtime.h>
 #include <linux/reset.h>
+#include <linux/soc/qcom/llcc-qcom.h>
 
 #include "iris_core.h"
 #include "iris_instance.h"
@@ -308,6 +309,20 @@ void iris_vpu_power_off_hw(struct iris_core *core)
 
 void iris_vpu_power_off(struct iris_core *core)
 {
+	int i;
+
+	if (core->llcc_active) {
+		for (i = ARRAY_SIZE(core->llcc_slices) - 1; i >= 0; i--) {
+			if (core->llcc_slices[i]) {
+				llcc_slice_deactivate(core->llcc_slices[i]);
+				llcc_slice_putd(core->llcc_slices[i]);
+				core->llcc_slices[i] = NULL;
+			}
+		}
+		core->llcc_active = false;
+		core->syscache_set = false;
+	}
+
 	core->iris_platform_data->vpu_ops->power_off_hw(core);
 	iris_opp_set_rate(core->dev, 0);
 	core->iris_platform_data->vpu_ops->power_off_controller(core);

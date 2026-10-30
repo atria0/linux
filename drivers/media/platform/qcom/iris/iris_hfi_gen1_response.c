@@ -534,6 +534,64 @@ error:
 	dev_err(core->dev, "error in ftb done\n");
 }
 
+static void
+iris_hfi_gen1_session_property_info(struct iris_inst *inst, void *packet)
+{
+	struct hfi_msg_session_property_info_pkt *pkt = packet;
+	struct hfi_buffer_requirements *req;
+	enum iris_buffer_type buffer_type;
+	u32 req_bytes, count, i;
+
+	req_bytes = pkt->shdr.hdr.size - sizeof(*pkt);
+	dev_dbg(inst->core->dev,
+		"Iris1: SESSION_PROPERTY_INFO properties=%u property=%#x payload=%u bytes\n",
+		pkt->num_properties, pkt->property, req_bytes);
+
+	if (pkt->num_properties != 1 ||
+	    pkt->property != HFI_PROPERTY_CONFIG_BUFFER_REQUIREMENTS ||
+	    !req_bytes || req_bytes % sizeof(*req)) {
+		dev_err(inst->core->dev,
+			"Iris1: malformed buffer requirements response\n");
+		complete(&inst->completion);
+		return;
+	}
+
+	count = req_bytes / sizeof(*req);
+	req = (struct hfi_buffer_requirements *)pkt->data;
+	for (i = 0; i < count; i++, req++) {
+		dev_dbg(inst->core->dev,
+			"Iris1: bufreq[%u] type=%#x size=%u region=%u hold=%u min=%u actual=%u contiguous=%u align=%u\n",
+			i, req->type, req->size, req->region_size,
+			req->hold_count, req->count_min, req->count_actual,
+			req->contiguous, req->alignment);
+
+		switch (req->type) {
+		case HFI_BUFFER_OUTPUT:
+			if (inst->domain != DECODER ||
+			    !iris_split_mode_enabled(inst))
+				continue;
+			buffer_type = BUF_DPB;
+			break;
+		case HFI_BUFFER_INTERNAL_PERSIST_1:
+			buffer_type = BUF_PERSIST;
+			break;
+		case HFI_BUFFER_INTERNAL_SCRATCH:
+			buffer_type = BUF_BIN;
+			break;
+		case HFI_BUFFER_INTERNAL_SCRATCH_1:
+			buffer_type = BUF_SCRATCH_1;
+			break;
+		default:
+			continue;
+		}
+
+		inst->fw_buffer_sizes[buffer_type] =
+			max(inst->fw_buffer_sizes[buffer_type], req->size);
+	}
+
+	complete(&inst->completion);
+}
+
 struct iris_hfi_gen1_response_pkt_info {
 	u32 pkt;
 	u32 pkt_sz;
@@ -579,6 +637,10 @@ static const struct iris_hfi_gen1_response_pkt_info pkt_infos[] = {
 	{
 	 .pkt = HFI_MSG_SESSION_FILL_BUFFER,
 	 .pkt_sz = sizeof(struct hfi_msg_session_fbd_compressed_pkt),
+	},
+	{
+	 .pkt = HFI_MSG_SESSION_PROPERTY_INFO,
+	 .pkt_sz = sizeof(struct hfi_msg_session_property_info_pkt),
 	},
 	{
 	 .pkt = HFI_MSG_SESSION_FLUSH,
@@ -653,12 +715,17 @@ static void iris_hfi_gen1_handle_response(struct iris_core *core, void *response
 			iris_hfi_gen1_session_etb_done(inst, hdr);
 		} else if (hdr->pkt_type == HFI_MSG_SESSION_FILL_BUFFER) {
 			iris_hfi_gen1_session_ftb_done(inst, hdr);
+		} else if (hdr->pkt_type == HFI_MSG_SESSION_PROPERTY_INFO) {
+			iris_hfi_gen1_session_property_info(inst, hdr);
 		} else {
 			struct hfi_msg_session_hdr_pkt *shdr;
 
 			shdr = (struct hfi_msg_session_hdr_pkt *)hdr;
-			if (shdr->error_type != HFI_ERR_NONE)
+			if (shdr->error_type != HFI_ERR_NONE) {
+				dev_err(dev, "Iris1 session response: type=%#x session=%#x error=%#x\n",
+					hdr->pkt_type, pkt->shdr.session_id, shdr->error_type);
 				iris_inst_change_state(inst, IRIS_INST_ERROR);
+			}
 
 			if (pkt_info->pkt == HFI_MSG_SESSION_FLUSH) {
 				if (!(--inst->flush_responses_pending))
@@ -683,8 +750,14 @@ static void iris_hfi_gen1_flush_debug_queue(struct iris_core *core, u8 *packet)
 		if (pkt->hdr.pkt_type != HFI_MSG_SYS_COV) {
 			struct hfi_msg_sys_debug_pkt *pkt =
 				(struct hfi_msg_sys_debug_pkt *)packet;
+			u32 msg_size;
 
-			dev_dbg(core->dev, "%s", pkt->msg_data);
+			if (pkt->hdr.size <= sizeof(*pkt))
+				continue;
+			msg_size = min_t(u32, pkt->msg_size,
+					 pkt->hdr.size - sizeof(*pkt));
+			dev_dbg(core->dev, "Iris1 FW DBG: %.*s\n",
+				(int)msg_size, pkt->msg_data);
 		}
 	}
 }

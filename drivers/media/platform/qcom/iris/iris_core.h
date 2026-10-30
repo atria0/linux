@@ -31,6 +31,7 @@ enum domain_type {
 };
 
 struct qcom_ubwc_cfg_data;
+struct llcc_slice_desc;
 
 /**
  * struct iris_core - holds core parameters valid for all instances
@@ -123,6 +124,9 @@ struct iris_core {
 	/* encoder and decoder have overlapping caps, so two different arrays are required */
 	struct platform_inst_fw_cap		inst_fw_caps_dec[INST_FW_CAP_MAX];
 	struct platform_inst_fw_cap		inst_fw_caps_enc[INST_FW_CAP_MAX];
+	struct llcc_slice_desc			*llcc_slices[2];
+	bool					llcc_active;
+	bool					syscache_set;
 };
 
 int iris_core_init(struct iris_core *core);
