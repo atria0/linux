@@ -77,9 +77,9 @@ The full nabu/SM8150 stack was ported forward from the 6.18 baseline onto a pris
 
 ---
 
-## Linux 7.3 Release (7.3.0-1 Final)
+## Linux 7.3 Release (7.3.1-0 Final)
 
-The complete Xiaomi Pad 5 (nabu) hardware stack has been ported to the pristine upstream **Linux 7.3.0** baseline (branch `nabu/7.3.y`). All peripherals in the hardware support matrix are fully functional.
+The complete Xiaomi Pad 5 (nabu) hardware stack has been ported to the pristine upstream **Linux 7.3.1** baseline (branch `nabu/7.3.y`). All peripherals in the hardware support matrix are fully functional.
 
 ### 1. Iris VPU Hardware Video Decode & Encode (Native 7.3 Architecture)
 - Upstream 7.3 introduced the modular `qcom-iris` VPU architecture. SM8150 Iris VPU5 hardware sequences, HFI queues, and clock un-gating were adapted for dual-core VCODEC:
@@ -110,5 +110,5 @@ The complete Xiaomi Pad 5 (nabu) hardware stack has been ported to the pristine 
 - **Sensors**: SLPI FastRPC sensor PDR registration with SDSP high-IOVA alias mapping for auto-rotation and ambient light sensing.
 
 ### 5. Packaging & Verification
-- **Package**: `linux-nabu-7.3.0-1` (`arch=('aarch64')`, kernel release `7.3.0-1-krjy`).
+- **Package**: `linux-nabu-7.3.1-0` (`arch=('aarch64')`, kernel release `7.3.1-0-krjy`).
 - **Unified Kernel Image (UKI)**: Automated UKI generation via `ukify` with DTB symlink, permissive device links, and early firmware bundling in `packages/linux-nabu-73/linux-nabu.install`.

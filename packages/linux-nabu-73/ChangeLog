@@ -1,4 +1,10 @@
 2026-10-30 Kumar-Jy <20044626+Kumar-Jy@users.noreply.github.com>
+	* 7.3.1-0:
+	- Linux: merge upstream stable Linux 7.3.1 (v7.3.1)
+	- Workflow: remove auto-run on push trigger and remove legacy branches in pkgbuild.yml
+	- Packaging: bump linux-nabu to 7.3.1-0 (kernel release 7.3.1-0-krjy)
+
+2026-10-30 Kumar-Jy <20044626+Kumar-Jy@users.noreply.github.com>
 	* 7.3.0-1:
 	- Iris: fix SM8150 VPU5 runtime PM forbid and ISR interrupt clear (fixes VIDIOC_REQBUFS failures)
 	- Iris: restore Gen1 buffer requirements query (HFI_CMD_SESSION_GET_PROPERTY) and session property info handling
